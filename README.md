@@ -1,0 +1,2 @@
+# ketsoc
+Globally distributed socket
