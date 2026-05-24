@@ -1,0 +1,9 @@
+{
+  "name": "ketsoc",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-23",
+  "durable_objects": {
+    "bindings": [{ "name": "HELLO", "class_name": "HelloRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["HelloRoom"] }]
+}
