@@ -3,7 +3,15 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-05-23",
   "durable_objects": {
-    "bindings": [{ "name": "HELLO", "class_name": "HelloRoom" }]
+    "bindings": [
+      { "name": "SESSION_DO", "class_name": "SessionDO" },
+      { "name": "USER_DO", "class_name": "UserDO" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["HelloRoom"] }]
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SessionDO", "UserDO"]
+    }
+  ]
 }
