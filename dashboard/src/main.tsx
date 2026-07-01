@@ -14,6 +14,7 @@ import { LoginRoute } from "./routes/login";
 import { SignupRoute } from "./routes/signup";
 import { ProtectedShell } from "./routes/protected";
 import { OverviewRoute } from "./routes/overview";
+import { ConnectionsRoute } from "./routes/connections";
 import { EnvironmentsRoute } from "./routes/environments";
 import { ApiKeysRoute } from "./routes/api-keys";
 import { Placeholder } from "./routes/placeholder";
@@ -25,7 +26,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/overview" replace /> },
       { path: "overview", element: <OverviewRoute /> },
-      { path: "connections", element: <Placeholder title="Connections" /> },
+      { path: "connections", element: <ConnectionsRoute /> },
       { path: "metrics", element: <Placeholder title="Metrics" /> },
       { path: "events", element: <Placeholder title="Events / Tail" /> },
       { path: "environments", element: <EnvironmentsRoute /> },
