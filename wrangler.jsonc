@@ -2,6 +2,13 @@
   "name": "ketsoc",
   "main": "src/index.ts",
   "compatibility_date": "2026-05-23",
+  "assets": {
+    "directory": "./dashboard/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // API + socket routes hit the Worker first; everything else serves the SPA.
+    "run_worker_first": ["/api/*", "/connect", "/emit", "/healthz"]
+  },
   "durable_objects": {
     "bindings": [
       { "name": "SESSION_DO", "class_name": "SessionDO" },

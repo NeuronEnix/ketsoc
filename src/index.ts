@@ -22,7 +22,7 @@ export default {
     const url = new URL(req.url);
 
     // ── Health check ─────────────────────────────────────────────────────────
-    if (req.method === "GET" && url.pathname === "/") {
+    if (req.method === "GET" && url.pathname === "/healthz") {
       return okResponse({ service: "ketsoc", status: "ok" });
     }
 
@@ -90,6 +90,9 @@ export default {
       });
     }
 
-    return errResponse("NOT_FOUND", "Route not found", 404);
+    // ── Static assets / SPA fallback ─────────────────────────────────────────
+    // API + socket routes are handled above; everything else serves the
+    // dashboard SPA from the ASSETS binding (not_found_handling = SPA).
+    return env.ASSETS.fetch(req);
   },
 } satisfies ExportedHandler<Env>;
