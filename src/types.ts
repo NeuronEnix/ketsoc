@@ -78,11 +78,8 @@ export interface EmitPayload {
 
 // ─── Response helpers ────────────────────────────────────────────────────────
 
-export interface ApiResponse<T> {
-  code: string;
-  msg: string;
-  data: T;
-}
+import type { ApiResponse } from "./contract.js";
+export type { ApiResponse };
 
 export function okResponse<T>(data: T, status = 200): Response {
   const body: ApiResponse<T> = { code: "OK", msg: "OK", data };

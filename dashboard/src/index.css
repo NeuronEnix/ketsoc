@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/*
+ * ketsoc design system — dark-violet (spec §11).
+ * Single dark theme for Phase 1. Tokens are shadcn/ui-compatible so
+ * `shadcn add` components drop in on-theme.
+ */
+
+@theme {
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+:root {
+  --background: #08080b;
+  --foreground: #ededf2;
+  --card: #0f0f16;
+  --card-foreground: #ededf2;
+  --popover: #16161f;
+  --popover-foreground: #ededf2;
+  --primary: #7c5cff;
+  --primary-foreground: #ffffff;
+  --secondary: #16161f;
+  --secondary-foreground: #ededf2;
+  --muted: #16161f;
+  --muted-foreground: #9a9aa8;
+  --accent: #1c1c26;
+  --accent-foreground: #ededf2;
+  --destructive: #ff5c7a;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.06);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #7c5cff;
+  --radius: 0.6rem;
+
+  /* Brand + data-viz sequence */
+  --violet: #7c5cff;
+  --violet-bright: #9d7bff;
+  --violet-deep: #5b3fd6;
+  --success: #3ecf8e;
+  --warning: #f5a623;
+  --info: #5cc8ff;
+  --magenta: #c15cff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-violet: var(--violet);
+  --color-violet-bright: var(--violet-bright);
+  --color-violet-deep: var(--violet-deep);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-magenta: var(--magenta);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  /* Tabular figures for all monospace numerics — the developer signal. */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+}
