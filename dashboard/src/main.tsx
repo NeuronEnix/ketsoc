@@ -6,6 +6,7 @@ import {
   Navigate,
   RouterProvider,
 } from "react-router-dom";
+import { Toaster } from "sonner";
 
 import "./index.css";
 import { queryClient } from "./lib/auth";
@@ -53,6 +54,19 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <Toaster
+        theme="dark"
+        position="bottom-right"
+        richColors
+        closeButton
+        toastOptions={{
+          style: {
+            background: "var(--color-card)",
+            border: "1px solid var(--color-border)",
+            color: "var(--color-foreground)",
+          },
+        }}
+      />
     </QueryClientProvider>
   </StrictMode>
 );

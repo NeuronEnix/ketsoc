@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useCurrentOrg } from "@/lib/current-org";
 import { useEnvs, useCreateEnv, useDeleteEnv } from "@/lib/envs";
@@ -80,7 +81,13 @@ export function EnvironmentsRoute() {
             <Button
               disabled={!valid || createEnv.isPending}
               onClick={() =>
-                createEnv.mutate(name, { onSuccess: () => setName("") })
+                createEnv.mutate(name, {
+                  onSuccess: (env) => {
+                    setName("");
+                    toast.success(`Environment ${env.name} created`);
+                  },
+                  onError: (e) => toast.error(envError(e)),
+                })
               }
             >
               {createEnv.isPending ? "…" : "Create"}
@@ -111,7 +118,13 @@ export function EnvironmentsRoute() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => deleteEnv.mutate(env.id)}
+                  onClick={() =>
+                    deleteEnv.mutate(env.id, {
+                      onSuccess: () =>
+                        toast.success(`Environment ${env.name} deleted`),
+                      onError: (e) => toast.error(envError(e)),
+                    })
+                  }
                   disabled={deleteEnv.isPending}
                   aria-label={`Delete ${env.name}`}
                 >

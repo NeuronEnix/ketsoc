@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Check, Copy, KeyRound, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useCurrentOrg } from "@/lib/current-org";
 import { useEnvs } from "@/lib/envs";
+import { ApiError } from "@/lib/api";
 import {
   useKeys,
   useCreateKey,
@@ -44,9 +46,23 @@ export function ApiKeysRoute() {
         onSuccess: (k) => {
           setRevealed(k.key);
           setLabel("");
+          toast.success(
+            `${type === "secret" ? "Secret" : "Public"} key created — copy it now`
+          );
         },
+        onError: (e) =>
+          toast.error(
+            e instanceof ApiError ? e.message : "Couldn't create the key"
+          ),
       }
     );
+  }
+
+  function revoke(keyId: string, prefix: string) {
+    revokeKey.mutate(keyId, {
+      onSuccess: () => toast.success(`Revoked ${prefix}…`),
+      onError: () => toast.error("Couldn't revoke the key"),
+    });
   }
 
   async function copy() {
@@ -56,9 +72,10 @@ export function ApiKeysRoute() {
     try {
       await navigator.clipboard.writeText(revealed);
       setCopied(true);
+      toast.success("Key copied to clipboard");
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      /* clipboard unavailable */
+      toast.error("Couldn't copy — copy it manually");
     }
   }
 
@@ -193,7 +210,7 @@ export function ApiKeysRoute() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => revokeKey.mutate(k.id)}
+                  onClick={() => revoke(k.id, k.keyPrefix)}
                   disabled={revokeKey.isPending}
                   aria-label={`Revoke ${k.keyPrefix}`}
                 >

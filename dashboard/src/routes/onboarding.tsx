@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { useCreateOrg } from "@/lib/orgs";
 import { ApiError } from "@/lib/api";
@@ -56,7 +57,11 @@ export function OnboardingScreen() {
             onSubmit={(e) => {
               e.preventDefault();
               if (valid && !createOrg.isPending) {
-                createOrg.mutate(name.trim());
+                createOrg.mutate(name.trim(), {
+                  onSuccess: (org) =>
+                    toast.success(`Welcome to ${org.displayName} 🎉`),
+                  onError: (e) => toast.error(orgError(e)),
+                });
               }
             }}
           >
