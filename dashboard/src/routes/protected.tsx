@@ -1,10 +1,10 @@
 import { Navigate } from "react-router-dom";
 
 import { useMe } from "@/lib/auth";
-import { HomeRoute } from "./home";
+import { AppShell } from "@/components/app-shell";
 
-/** Gate the app behind auth: loading → spinner, no user → /login, else home. */
-export function ProtectedHome() {
+/** Gate the app behind auth: loading → spinner, no user → /login, else the shell. */
+export function ProtectedShell() {
   const { data: user, isLoading } = useMe();
 
   if (isLoading) {
@@ -19,5 +19,5 @@ export function ProtectedHome() {
     return <Navigate to="/login" replace />;
   }
 
-  return <HomeRoute user={user} />;
+  return <AppShell />;
 }
