@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { OverviewRoute } from "./overview";
 import { CurrentOrgProvider } from "@/lib/current-org";
+import { CurrentEnvProvider } from "@/lib/current-env";
 
 function renderScreen() {
   const qc = new QueryClient({
@@ -36,7 +37,9 @@ function renderScreen() {
   render(
     <QueryClientProvider client={qc}>
       <CurrentOrgProvider>
-        <OverviewRoute />
+        <CurrentEnvProvider>
+          <OverviewRoute />
+        </CurrentEnvProvider>
       </CurrentOrgProvider>
     </QueryClientProvider>
   );

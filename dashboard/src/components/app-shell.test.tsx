@@ -5,11 +5,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { AppShell } from "./app-shell";
 
-function renderShell(orgs: unknown[] = [{ id: "org_1", displayName: "Acme", handle: null, role: "owner", createdAt: 1 }]) {
+const PROD = { id: "env_prod", name: "prod", mode: "live", isPermanent: true, createdAt: 1 };
+const TEST = { id: "env_test", name: "test", mode: "test", isPermanent: false, createdAt: 2 };
+
+function renderShell(
+  orgs: unknown[] = [{ id: "org_1", displayName: "Acme", handle: null, role: "owner", createdAt: 1 }],
+  envs: unknown[] = [PROD, TEST]
+) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
   qc.setQueryData(["orgs"], orgs);
+  qc.setQueryData(["envs", "org_1"], envs);
   qc.setQueryData(["me"], {
     id: "usr_1",
     email: "a@b.com",
@@ -45,5 +52,16 @@ describe("AppShell", () => {
     renderShell([]);
     expect(screen.getByText("Create your organization")).toBeInTheDocument();
     expect(screen.queryByText("Overview")).toBeNull();
+  });
+
+  it("defaults the env switcher to prod (live, no TEST MODE badge)", () => {
+    renderShell();
+    expect(screen.getByText("prod")).toBeInTheDocument();
+    expect(screen.queryByText("Test Mode")).toBeNull();
+  });
+
+  it("flags TEST MODE when the active env is test-mode", () => {
+    renderShell(undefined, [TEST]);
+    expect(screen.getByText("Test Mode")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
 import { useCurrentOrg } from "@/lib/current-org";
-import { useEnvs } from "@/lib/envs";
+import { useCurrentEnv } from "@/lib/current-env";
 import { useOverview, type MetricsOverview } from "@/lib/metrics";
 import {
   Card,
@@ -41,8 +41,7 @@ function RegionBars({ data }: { data: MetricsOverview["byRegion"] }) {
 export function OverviewRoute() {
   const { current } = useCurrentOrg();
   const orgId = current?.id ?? null;
-  const envs = useEnvs(orgId).data ?? [];
-  const env = envs.find((e) => e.name === "prod") ?? envs[0] ?? null;
+  const { current: env } = useCurrentEnv();
   const overview = useOverview(orgId, env?.id ?? null);
   const m = overview.data;
 

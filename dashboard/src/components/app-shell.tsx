@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { CurrentOrgProvider, useCurrentOrg } from "@/lib/current-org";
+import { CurrentEnvProvider, useCurrentEnv } from "@/lib/current-env";
 import { useLogout, useMe } from "@/lib/auth";
 import { OnboardingScreen } from "@/routes/onboarding";
 
@@ -109,6 +110,50 @@ function OrgSwitcher() {
   );
 }
 
+function EnvSwitcher() {
+  const { envs, current, select } = useCurrentEnv();
+  return (
+    <div className="flex items-center gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
+          <span
+            className={cn(
+              "h-2 w-2 rounded-full",
+              current?.mode === "live"
+                ? "bg-success shadow-[0_0_8px_var(--color-success)]"
+                : "bg-amber-400"
+            )}
+          />
+          <span className="font-mono font-medium">{current?.name ?? "—"}</span>
+          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Environments</DropdownMenuLabel>
+          {envs.map((e) => (
+            <DropdownMenuItem key={e.id} onSelect={() => select(e.id)}>
+              <span className="font-mono">{e.name}</span>
+              {e.mode === "live" ? (
+                <Badge variant="success" className="ml-auto text-[10px]">
+                  live
+                </Badge>
+              ) : (
+                <Badge variant="test" className="ml-auto text-[10px]">
+                  test
+                </Badge>
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {current?.mode === "test" ? (
+        <Badge variant="test" className="uppercase tracking-wide">
+          Test Mode
+        </Badge>
+      ) : null}
+    </div>
+  );
+}
+
 function UserMenu() {
   const { data: user } = useMe();
   const logout = useLogout();
@@ -162,17 +207,21 @@ function Shell() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-3 border-b border-border px-6">
-          <OrgSwitcher />
-          <div className="ml-auto flex items-center gap-3">
-            <UserMenu />
-          </div>
-        </header>
-        <main className="flex-1 overflow-auto p-6">
-          <Outlet />
-        </main>
-      </div>
+      <CurrentEnvProvider>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="flex h-14 items-center gap-3 border-b border-border px-6">
+            <OrgSwitcher />
+            <span className="text-muted-foreground/40">/</span>
+            <EnvSwitcher />
+            <div className="ml-auto flex items-center gap-3">
+              <UserMenu />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto p-6">
+            <Outlet />
+          </main>
+        </div>
+      </CurrentEnvProvider>
     </div>
   );
 }
