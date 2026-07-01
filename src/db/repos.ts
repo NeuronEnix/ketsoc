@@ -131,3 +131,26 @@ export interface EnvRepo {
   countByOrg(orgId: string): Promise<number>;
   delete(id: string): Promise<void>;
 }
+
+// ─── API keys ────────────────────────────────────────────────────────────────
+
+export type ApiKeyType = "public" | "secret";
+
+export interface ApiKey {
+  id: string; // kid
+  envId: string;
+  type: ApiKeyType;
+  label: string | null;
+  keyHash: string;
+  keyPrefix: string;
+  lastUsedAt: number | null;
+  revokedAt: number | null;
+  createdAt: number;
+}
+
+export interface ApiKeyRepo {
+  create(key: ApiKey): Promise<ApiKey>;
+  listByEnv(envId: string): Promise<ApiKey[]>;
+  findById(id: string): Promise<ApiKey | null>;
+  update(key: ApiKey): Promise<void>;
+}

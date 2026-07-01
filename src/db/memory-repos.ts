@@ -11,6 +11,8 @@ import type {
   MembershipRepo,
   Environment,
   EnvRepo,
+  ApiKey,
+  ApiKeyRepo,
 } from "./repos.js";
 
 /** In-memory UserRepo for unit tests. */
@@ -189,5 +191,30 @@ export class MemoryEnvRepo implements EnvRepo {
 
   async delete(id: string): Promise<void> {
     this.byId.delete(id);
+  }
+}
+
+/** In-memory ApiKeyRepo for unit tests. */
+export class MemoryApiKeyRepo implements ApiKeyRepo {
+  private byId = new Map<string, ApiKey>();
+
+  async create(key: ApiKey): Promise<ApiKey> {
+    this.byId.set(key.id, { ...key });
+    return { ...key };
+  }
+
+  async listByEnv(envId: string): Promise<ApiKey[]> {
+    return [...this.byId.values()]
+      .filter((k) => k.envId === envId)
+      .map((k) => ({ ...k }));
+  }
+
+  async findById(id: string): Promise<ApiKey | null> {
+    const k = this.byId.get(id);
+    return k ? { ...k } : null;
+  }
+
+  async update(key: ApiKey): Promise<void> {
+    this.byId.set(key.id, { ...key });
   }
 }
