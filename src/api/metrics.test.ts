@@ -67,6 +67,31 @@ describe("handleMetricsRequest()", () => {
     expect((body["latencyMs"] as { p50: number }).p50).toBeGreaterThan(0);
   });
 
+  it("returns a seeded time-series with a valid range (200)", async () => {
+    const { deps, orgId, envId } = await setup();
+    const res = await handleMetricsRequest(
+      req(`/api/orgs/${orgId}/envs/${envId}/metrics/series?range=24h`),
+      deps,
+      USER
+    );
+    expect(res.status).toBe(200);
+    const body = await data(res);
+    expect(body["range"]).toBe("24h");
+    expect(Array.isArray(body["points"])).toBe(true);
+    expect((body["points"] as unknown[]).length).toBe(60);
+  });
+
+  it("falls back to the 1h range for a bogus range param", async () => {
+    const { deps, orgId, envId } = await setup();
+    const res = await handleMetricsRequest(
+      req(`/api/orgs/${orgId}/envs/${envId}/metrics/series?range=nope`),
+      deps,
+      USER
+    );
+    expect(res.status).toBe(200);
+    expect((await data(res))["range"]).toBe("1h");
+  });
+
   it("404s a non-member, another org's env, and unknown metric", async () => {
     const { deps, orgId, envId } = await setup();
     const other: PublicUser = {

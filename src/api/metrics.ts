@@ -5,6 +5,7 @@ import type { EnvService, EnvErrorCode } from "../tenancy/env-service.js";
 import type { PublicUser } from "../auth/service.js";
 import { okResponse, errResponse } from "../types.js";
 import { seededOverview } from "../telemetry/seed.js";
+import { seededSeries, isSeriesRange } from "../telemetry/series.js";
 
 const TENANCY_STATUS: Record<TenancyErrorCode, number> = {
   INVALID_NAME: 400,
@@ -48,9 +49,15 @@ export async function handleMetricsRequest(
     await deps.orgService.getForUser(user.id, orgId);
     const env = await deps.envService.getForOrg(orgId, envId);
 
+    const now = (deps.nowMs ?? (() => Date.now()))();
+
     if (req.method === "GET" && segs[4] === "overview") {
-      const now = (deps.nowMs ?? (() => Date.now()))();
       return okResponse(seededOverview(env.id, env.mode, now));
+    }
+    if (req.method === "GET" && segs[4] === "series") {
+      const rangeParam = url.searchParams.get("range") ?? "1h";
+      const range = isSeriesRange(rangeParam) ? rangeParam : "1h";
+      return okResponse(seededSeries(env.id, env.mode, now, range));
     }
     return errResponse("NOT_FOUND", "Unknown metrics route", 404);
   } catch (e) {
