@@ -16,18 +16,34 @@
   "license": "MIT",
   "author": "Kaushik R Bangera",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "dev": "wrangler dev",
     "build:clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc",
+    "prepublishOnly": "pnpm build:clean && pnpm test",
+    "prepack": "pnpm build:clean",
     "format": "prettier --write src",
     "format:staged": "lint-staged --config .lintstagedrc.json --allow-empty",
     "lint": "eslint --fix src",
     "lint:staged": "lint-staged --config .lintstagedrc.json --allow-empty",
     "lint-staged": "lint-staged --allow-empty",
     "prepare": "husky",
-    "test": "echo \"no tests yet\""
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260522.1",
@@ -46,6 +62,7 @@
     "prettier": "^3.8.3",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
+    "vitest": "^3.2.6",
     "wrangler": "^4.93.1"
   },
   "dependencies": {
