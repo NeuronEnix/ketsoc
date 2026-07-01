@@ -16,6 +16,7 @@ import { ProtectedShell } from "./routes/protected";
 import { OverviewRoute } from "./routes/overview";
 import { ConnectionsRoute } from "./routes/connections";
 import { MetricsRoute } from "./routes/metrics";
+import { EventsRoute } from "./routes/events";
 import { EnvironmentsRoute } from "./routes/environments";
 import { ApiKeysRoute } from "./routes/api-keys";
 import { Placeholder } from "./routes/placeholder";
@@ -29,7 +30,7 @@ const router = createBrowserRouter([
       { path: "overview", element: <OverviewRoute /> },
       { path: "connections", element: <ConnectionsRoute /> },
       { path: "metrics", element: <MetricsRoute /> },
-      { path: "events", element: <Placeholder title="Events / Tail" /> },
+      { path: "events", element: <EventsRoute /> },
       { path: "environments", element: <EnvironmentsRoute /> },
       { path: "keys", element: <ApiKeysRoute /> },
       { path: "usage", element: <Placeholder title="Usage" /> },
