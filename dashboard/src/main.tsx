@@ -15,6 +15,7 @@ import { SignupRoute } from "./routes/signup";
 import { ProtectedShell } from "./routes/protected";
 import { OverviewRoute } from "./routes/overview";
 import { EnvironmentsRoute } from "./routes/environments";
+import { ApiKeysRoute } from "./routes/api-keys";
 import { Placeholder } from "./routes/placeholder";
 
 const router = createBrowserRouter([
@@ -28,7 +29,7 @@ const router = createBrowserRouter([
       { path: "metrics", element: <Placeholder title="Metrics" /> },
       { path: "events", element: <Placeholder title="Events / Tail" /> },
       { path: "environments", element: <EnvironmentsRoute /> },
-      { path: "keys", element: <Placeholder title="API Keys" /> },
+      { path: "keys", element: <ApiKeysRoute /> },
       { path: "usage", element: <Placeholder title="Usage" /> },
       { path: "settings", element: <Placeholder title="Settings" /> },
     ],
