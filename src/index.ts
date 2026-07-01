@@ -2,6 +2,9 @@ import type { Env, EmitPayload } from "./types.js";
 import { okResponse, errResponse } from "./types.js";
 import { SessionDO } from "./session-do.js";
 import { UserDO } from "./user-do.js";
+import { AuthService } from "./auth/service.js";
+import { D1UserRepo, D1SessionRepo } from "./db/d1-repos.js";
+import { handleAuthRequest } from "./api/auth.js";
 
 export { SessionDO, UserDO };
 
@@ -24,6 +27,19 @@ export default {
     // ── Health check ─────────────────────────────────────────────────────────
     if (req.method === "GET" && url.pathname === "/healthz") {
       return okResponse({ service: "ketsoc", status: "ok" });
+    }
+
+    // ── Auth API ─────────────────────────────────────────────────────────────
+    if (url.pathname.startsWith("/api/auth/")) {
+      const authService = new AuthService({
+        users: new D1UserRepo(env.DB),
+        sessions: new D1SessionRepo(env.DB),
+        jwtSecret: env.JWT_SECRET,
+      });
+      const authResponse = await handleAuthRequest(req, authService);
+      if (authResponse) {
+        return authResponse;
+      }
     }
 
     // ── WebSocket connect ────────────────────────────────────────────────────

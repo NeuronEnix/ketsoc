@@ -7,6 +7,8 @@ export interface Env {
   DB: D1Database;
   /** Static assets binding — serves the built dashboard SPA (dashboard/dist). */
   ASSETS: Fetcher;
+  /** HMAC secret for signing access JWTs (via `wrangler secret` / .dev.vars). */
+  JWT_SECRET: string;
 }
 
 // ─── Wire protocol – client facing ──────────────────────────────────────────
