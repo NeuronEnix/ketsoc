@@ -3,8 +3,15 @@ import { okResponse, errResponse } from "./types.js";
 import { SessionDO } from "./session-do.js";
 import { UserDO } from "./user-do.js";
 import { AuthService } from "./auth/service.js";
-import { D1UserRepo, D1SessionRepo } from "./db/d1-repos.js";
-import { handleAuthRequest } from "./api/auth.js";
+import { OrgService } from "./tenancy/service.js";
+import {
+  D1UserRepo,
+  D1SessionRepo,
+  D1OrgRepo,
+  D1MembershipRepo,
+} from "./db/d1-repos.js";
+import { handleAuthRequest, getAuthUser } from "./api/auth.js";
+import { handleOrgsRequest } from "./api/orgs.js";
 
 export { SessionDO, UserDO };
 
@@ -40,6 +47,24 @@ export default {
       if (authResponse) {
         return authResponse;
       }
+    }
+
+    // ── Orgs API (requires auth) ─────────────────────────────────────────────
+    if (url.pathname.startsWith("/api/orgs")) {
+      const authService = new AuthService({
+        users: new D1UserRepo(env.DB),
+        sessions: new D1SessionRepo(env.DB),
+        jwtSecret: env.JWT_SECRET,
+      });
+      const user = await getAuthUser(req, authService);
+      if (!user) {
+        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
+      }
+      const orgService = new OrgService({
+        orgs: new D1OrgRepo(env.DB),
+        memberships: new D1MembershipRepo(env.DB),
+      });
+      return handleOrgsRequest(req, orgService, user);
     }
 
     // ── WebSocket connect ────────────────────────────────────────────────────

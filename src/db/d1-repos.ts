@@ -4,6 +4,12 @@ import type {
   AuthSession,
   UserRepo,
   SessionRepo,
+  Org,
+  NewOrg,
+  Membership,
+  OrgRole,
+  OrgRepo,
+  MembershipRepo,
 } from "./repos.js";
 
 interface UserRow {
@@ -133,6 +139,142 @@ export class D1SessionRepo implements SessionRepo {
     await this.db
       .prepare("DELETE FROM auth_sessions WHERE user_id = ?")
       .bind(userId)
+      .run();
+  }
+}
+
+interface OrgRow {
+  id: string;
+  display_name: string;
+  handle: string | null;
+  owner_user_id: string;
+  created_at: number;
+  updated_at: number;
+}
+
+function toOrg(r: OrgRow): Org {
+  return {
+    id: r.id,
+    displayName: r.display_name,
+    handle: r.handle,
+    ownerUserId: r.owner_user_id,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export class D1OrgRepo implements OrgRepo {
+  constructor(private readonly db: D1Database) {}
+
+  async create(o: NewOrg): Promise<Org> {
+    await this.db
+      .prepare(
+        "INSERT INTO orgs (id, display_name, handle, owner_user_id, created_at, updated_at) VALUES (?, ?, NULL, ?, ?, ?)"
+      )
+      .bind(o.id, o.displayName, o.ownerUserId, o.createdAt, o.createdAt)
+      .run();
+    return { ...o, handle: null, updatedAt: o.createdAt };
+  }
+
+  async findById(id: string): Promise<Org | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM orgs WHERE id = ?")
+      .bind(id)
+      .first<OrgRow>();
+    return row ? toOrg(row) : null;
+  }
+
+  async update(o: Org): Promise<void> {
+    await this.db
+      .prepare(
+        "UPDATE orgs SET display_name = ?, handle = ?, updated_at = ? WHERE id = ?"
+      )
+      .bind(o.displayName, o.handle, o.updatedAt, o.id)
+      .run();
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db.prepare("DELETE FROM orgs WHERE id = ?").bind(id).run();
+  }
+
+  async countOwnedByUser(userId: string): Promise<number> {
+    const row = await this.db
+      .prepare("SELECT COUNT(*) AS n FROM orgs WHERE owner_user_id = ?")
+      .bind(userId)
+      .first<{ n: number }>();
+    return row?.n ?? 0;
+  }
+}
+
+interface MembershipRow {
+  id: string;
+  user_id: string;
+  org_id: string;
+  role: string;
+  created_at: number;
+}
+
+function toMembership(r: MembershipRow): Membership {
+  return {
+    id: r.id,
+    userId: r.user_id,
+    orgId: r.org_id,
+    role: r.role as OrgRole,
+    createdAt: r.created_at,
+  };
+}
+
+export class D1MembershipRepo implements MembershipRepo {
+  constructor(private readonly db: D1Database) {}
+
+  async create(m: Membership): Promise<Membership> {
+    await this.db
+      .prepare(
+        "INSERT INTO memberships (id, user_id, org_id, role, created_at) VALUES (?, ?, ?, ?, ?)"
+      )
+      .bind(m.id, m.userId, m.orgId, m.role, m.createdAt)
+      .run();
+    return m;
+  }
+
+  async findByUserAndOrg(
+    userId: string,
+    orgId: string
+  ): Promise<Membership | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM memberships WHERE user_id = ? AND org_id = ?")
+      .bind(userId, orgId)
+      .first<MembershipRow>();
+    return row ? toMembership(row) : null;
+  }
+
+  async listByUser(userId: string): Promise<Membership[]> {
+    const { results } = await this.db
+      .prepare("SELECT * FROM memberships WHERE user_id = ?")
+      .bind(userId)
+      .all<MembershipRow>();
+    return results.map(toMembership);
+  }
+
+  async listByOrg(orgId: string): Promise<Membership[]> {
+    const { results } = await this.db
+      .prepare("SELECT * FROM memberships WHERE org_id = ?")
+      .bind(orgId)
+      .all<MembershipRow>();
+    return results.map(toMembership);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db
+      .prepare("DELETE FROM memberships WHERE id = ?")
+      .bind(id)
+      .run();
+  }
+
+  async deleteByOrg(orgId: string): Promise<void> {
+    await this.db
+      .prepare("DELETE FROM memberships WHERE org_id = ?")
+      .bind(orgId)
       .run();
   }
 }
