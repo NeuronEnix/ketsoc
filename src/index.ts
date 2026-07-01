@@ -4,14 +4,17 @@ import { SessionDO } from "./session-do.js";
 import { UserDO } from "./user-do.js";
 import { AuthService } from "./auth/service.js";
 import { OrgService } from "./tenancy/service.js";
+import { EnvService } from "./tenancy/env-service.js";
 import {
   D1UserRepo,
   D1SessionRepo,
   D1OrgRepo,
   D1MembershipRepo,
+  D1EnvRepo,
 } from "./db/d1-repos.js";
 import { handleAuthRequest, getAuthUser } from "./api/auth.js";
 import { handleOrgsRequest } from "./api/orgs.js";
+import { handleEnvsRequest } from "./api/envs.js";
 
 export { SessionDO, UserDO };
 
@@ -47,6 +50,28 @@ export default {
       if (authResponse) {
         return authResponse;
       }
+    }
+
+    // ── Environments API (nested under orgs, requires auth) ───────────────────
+    if (
+      url.pathname.startsWith("/api/orgs/") &&
+      url.pathname.split("/")[4] === "envs"
+    ) {
+      const authService = new AuthService({
+        users: new D1UserRepo(env.DB),
+        sessions: new D1SessionRepo(env.DB),
+        jwtSecret: env.JWT_SECRET,
+      });
+      const user = await getAuthUser(req, authService);
+      if (!user) {
+        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
+      }
+      const orgService = new OrgService({
+        orgs: new D1OrgRepo(env.DB),
+        memberships: new D1MembershipRepo(env.DB),
+      });
+      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
+      return handleEnvsRequest(req, { orgService, envService }, user);
     }
 
     // ── Orgs API (requires auth) ─────────────────────────────────────────────

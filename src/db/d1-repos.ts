@@ -10,6 +10,9 @@ import type {
   OrgRole,
   OrgRepo,
   MembershipRepo,
+  Environment,
+  EnvMode,
+  EnvRepo,
 } from "./repos.js";
 
 interface UserRow {
@@ -275,6 +278,84 @@ export class D1MembershipRepo implements MembershipRepo {
     await this.db
       .prepare("DELETE FROM memberships WHERE org_id = ?")
       .bind(orgId)
+      .run();
+  }
+}
+
+interface EnvRow {
+  id: string;
+  org_id: string;
+  name: string;
+  mode: string;
+  is_permanent: number;
+  created_at: number;
+}
+
+function toEnvironment(r: EnvRow): Environment {
+  return {
+    id: r.id,
+    orgId: r.org_id,
+    name: r.name,
+    mode: r.mode as EnvMode,
+    isPermanent: r.is_permanent === 1,
+    createdAt: r.created_at,
+  };
+}
+
+export class D1EnvRepo implements EnvRepo {
+  constructor(private readonly db: D1Database) {}
+
+  async create(e: Environment): Promise<Environment> {
+    await this.db
+      .prepare(
+        "INSERT INTO environments (id, org_id, name, mode, is_permanent, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+      )
+      .bind(e.id, e.orgId, e.name, e.mode, e.isPermanent ? 1 : 0, e.createdAt)
+      .run();
+    return e;
+  }
+
+  async findById(id: string): Promise<Environment | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM environments WHERE id = ?")
+      .bind(id)
+      .first<EnvRow>();
+    return row ? toEnvironment(row) : null;
+  }
+
+  async findByOrgAndName(
+    orgId: string,
+    name: string
+  ): Promise<Environment | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM environments WHERE org_id = ? AND name = ?")
+      .bind(orgId, name)
+      .first<EnvRow>();
+    return row ? toEnvironment(row) : null;
+  }
+
+  async listByOrg(orgId: string): Promise<Environment[]> {
+    const { results } = await this.db
+      .prepare(
+        "SELECT * FROM environments WHERE org_id = ? ORDER BY created_at"
+      )
+      .bind(orgId)
+      .all<EnvRow>();
+    return results.map(toEnvironment);
+  }
+
+  async countByOrg(orgId: string): Promise<number> {
+    const row = await this.db
+      .prepare("SELECT COUNT(*) AS n FROM environments WHERE org_id = ?")
+      .bind(orgId)
+      .first<{ n: number }>();
+    return row?.n ?? 0;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db
+      .prepare("DELETE FROM environments WHERE id = ?")
+      .bind(id)
       .run();
   }
 }
