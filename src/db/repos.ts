@@ -1,5 +1,7 @@
 /** Persistence contracts. Implemented by D1 (prod) and in-memory (tests). */
 
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
 export interface User {
   id: string;
   email: string;
@@ -39,4 +41,71 @@ export interface SessionRepo {
   update(session: AuthSession): Promise<void>;
   deleteById(id: string): Promise<void>;
   deleteByUser(userId: string): Promise<void>;
+}
+
+// ─── Tenancy ─────────────────────────────────────────────────────────────────
+
+export type OrgRole = "owner" | "member";
+export type InviteStatus = "pending" | "accepted" | "revoked";
+
+export interface Org {
+  id: string;
+  displayName: string;
+  /** Reserved for future subdomains; unused in Phase 1. */
+  handle: string | null;
+  ownerUserId: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface NewOrg {
+  id: string;
+  displayName: string;
+  ownerUserId: string;
+  createdAt: number;
+}
+
+export interface Membership {
+  id: string;
+  userId: string;
+  orgId: string;
+  role: OrgRole;
+  createdAt: number;
+}
+
+export interface Invite {
+  id: string;
+  orgId: string;
+  token: string;
+  email: string | null;
+  role: OrgRole;
+  status: InviteStatus;
+  invitedBy: string;
+  expiresAt: number;
+  createdAt: number;
+}
+
+export interface OrgRepo {
+  create(org: NewOrg): Promise<Org>;
+  findById(id: string): Promise<Org | null>;
+  update(org: Org): Promise<void>;
+  delete(id: string): Promise<void>;
+  countOwnedByUser(userId: string): Promise<number>;
+}
+
+export interface MembershipRepo {
+  create(membership: Membership): Promise<Membership>;
+  findByUserAndOrg(userId: string, orgId: string): Promise<Membership | null>;
+  listByUser(userId: string): Promise<Membership[]>;
+  listByOrg(orgId: string): Promise<Membership[]>;
+  delete(id: string): Promise<void>;
+  deleteByOrg(orgId: string): Promise<void>;
+}
+
+export interface InviteRepo {
+  create(invite: Invite): Promise<Invite>;
+  findByToken(token: string): Promise<Invite | null>;
+  listByOrg(orgId: string): Promise<Invite[]>;
+  update(invite: Invite): Promise<void>;
+  delete(id: string): Promise<void>;
 }

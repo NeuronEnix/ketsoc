@@ -4,6 +4,11 @@ import type {
   AuthSession,
   UserRepo,
   SessionRepo,
+  Org,
+  NewOrg,
+  Membership,
+  OrgRepo,
+  MembershipRepo,
 } from "./repos.js";
 
 /** In-memory UserRepo for unit tests. */
@@ -52,6 +57,86 @@ export class MemorySessionRepo implements SessionRepo {
   async deleteByUser(userId: string): Promise<void> {
     for (const [id, s] of this.byId) {
       if (s.userId === userId) {
+        this.byId.delete(id);
+      }
+    }
+  }
+}
+
+/** In-memory OrgRepo for unit tests. */
+export class MemoryOrgRepo implements OrgRepo {
+  private byId = new Map<string, Org>();
+
+  async create(org: NewOrg): Promise<Org> {
+    const full: Org = { ...org, handle: null, updatedAt: org.createdAt };
+    this.byId.set(full.id, full);
+    return { ...full };
+  }
+
+  async findById(id: string): Promise<Org | null> {
+    const org = this.byId.get(id);
+    return org ? { ...org } : null;
+  }
+
+  async update(org: Org): Promise<void> {
+    this.byId.set(org.id, { ...org });
+  }
+
+  async delete(id: string): Promise<void> {
+    this.byId.delete(id);
+  }
+
+  async countOwnedByUser(userId: string): Promise<number> {
+    let n = 0;
+    for (const org of this.byId.values()) {
+      if (org.ownerUserId === userId) {
+        n++;
+      }
+    }
+    return n;
+  }
+}
+
+/** In-memory MembershipRepo for unit tests. */
+export class MemoryMembershipRepo implements MembershipRepo {
+  private byId = new Map<string, Membership>();
+
+  async create(membership: Membership): Promise<Membership> {
+    this.byId.set(membership.id, { ...membership });
+    return { ...membership };
+  }
+
+  async findByUserAndOrg(
+    userId: string,
+    orgId: string
+  ): Promise<Membership | null> {
+    for (const m of this.byId.values()) {
+      if (m.userId === userId && m.orgId === orgId) {
+        return { ...m };
+      }
+    }
+    return null;
+  }
+
+  async listByUser(userId: string): Promise<Membership[]> {
+    return [...this.byId.values()]
+      .filter((m) => m.userId === userId)
+      .map((m) => ({ ...m }));
+  }
+
+  async listByOrg(orgId: string): Promise<Membership[]> {
+    return [...this.byId.values()]
+      .filter((m) => m.orgId === orgId)
+      .map((m) => ({ ...m }));
+  }
+
+  async delete(id: string): Promise<void> {
+    this.byId.delete(id);
+  }
+
+  async deleteByOrg(orgId: string): Promise<void> {
+    for (const [id, m] of this.byId) {
+      if (m.orgId === orgId) {
         this.byId.delete(id);
       }
     }
