@@ -19,9 +19,9 @@ import { ConnectionsRoute } from "./routes/connections";
 import { MetricsRoute } from "./routes/metrics";
 import { EventsRoute } from "./routes/events";
 import { UsageRoute } from "./routes/usage";
+import { SettingsRoute } from "./routes/settings";
 import { EnvironmentsRoute } from "./routes/environments";
 import { ApiKeysRoute } from "./routes/api-keys";
-import { Placeholder } from "./routes/placeholder";
 
 const router = createBrowserRouter([
   {
@@ -36,7 +36,7 @@ const router = createBrowserRouter([
       { path: "environments", element: <EnvironmentsRoute /> },
       { path: "keys", element: <ApiKeysRoute /> },
       { path: "usage", element: <UsageRoute /> },
-      { path: "settings", element: <Placeholder title="Settings" /> },
+      { path: "settings", element: <SettingsRoute /> },
     ],
   },
   { path: "/login", element: <LoginRoute /> },

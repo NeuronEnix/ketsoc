@@ -26,3 +26,13 @@ export function useCreateOrg() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["orgs"] }),
   });
 }
+
+/** Rename an org (owner only, enforced server-side) and refresh the list. */
+export function useUpdateOrg(orgId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (displayName: string) =>
+      api.patch<Org>(`/api/orgs/${orgId}`, { displayName }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["orgs"] }),
+  });
+}
