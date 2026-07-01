@@ -109,3 +109,25 @@ export interface InviteRepo {
   update(invite: Invite): Promise<void>;
   delete(id: string): Promise<void>;
 }
+
+// ─── Environments ────────────────────────────────────────────────────────────
+
+export type EnvMode = "live" | "test";
+
+export interface Environment {
+  id: string;
+  orgId: string;
+  name: string;
+  mode: EnvMode;
+  isPermanent: boolean;
+  createdAt: number;
+}
+
+export interface EnvRepo {
+  create(env: Environment): Promise<Environment>;
+  findById(id: string): Promise<Environment | null>;
+  findByOrgAndName(orgId: string, name: string): Promise<Environment | null>;
+  listByOrg(orgId: string): Promise<Environment[]>;
+  countByOrg(orgId: string): Promise<number>;
+  delete(id: string): Promise<void>;
+}

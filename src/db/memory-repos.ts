@@ -9,6 +9,8 @@ import type {
   Membership,
   OrgRepo,
   MembershipRepo,
+  Environment,
+  EnvRepo,
 } from "./repos.js";
 
 /** In-memory UserRepo for unit tests. */
@@ -140,5 +142,52 @@ export class MemoryMembershipRepo implements MembershipRepo {
         this.byId.delete(id);
       }
     }
+  }
+}
+
+/** In-memory EnvRepo for unit tests. */
+export class MemoryEnvRepo implements EnvRepo {
+  private byId = new Map<string, Environment>();
+
+  async create(env: Environment): Promise<Environment> {
+    this.byId.set(env.id, { ...env });
+    return { ...env };
+  }
+
+  async findById(id: string): Promise<Environment | null> {
+    const e = this.byId.get(id);
+    return e ? { ...e } : null;
+  }
+
+  async findByOrgAndName(
+    orgId: string,
+    name: string
+  ): Promise<Environment | null> {
+    for (const e of this.byId.values()) {
+      if (e.orgId === orgId && e.name === name) {
+        return { ...e };
+      }
+    }
+    return null;
+  }
+
+  async listByOrg(orgId: string): Promise<Environment[]> {
+    return [...this.byId.values()]
+      .filter((e) => e.orgId === orgId)
+      .map((e) => ({ ...e }));
+  }
+
+  async countByOrg(orgId: string): Promise<number> {
+    let n = 0;
+    for (const e of this.byId.values()) {
+      if (e.orgId === orgId) {
+        n++;
+      }
+    }
+    return n;
+  }
+
+  async delete(id: string): Promise<void> {
+    this.byId.delete(id);
   }
 }
