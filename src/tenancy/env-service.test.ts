@@ -98,3 +98,17 @@ describe("EnvService.delete()", () => {
     });
   });
 });
+
+describe("EnvService.getForOrg()", () => {
+  it("returns an env in the org and 404s otherwise", async () => {
+    const { svc } = makeService();
+    const env = await svc.create("org_1", "stag");
+    expect((await svc.getForOrg("org_1", env.id)).id).toBe(env.id);
+    await expect(svc.getForOrg("org_2", env.id)).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    await expect(svc.getForOrg("org_1", "env_missing")).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+});

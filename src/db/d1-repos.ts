@@ -13,6 +13,9 @@ import type {
   Environment,
   EnvMode,
   EnvRepo,
+  ApiKey,
+  ApiKeyType,
+  ApiKeyRepo,
 } from "./repos.js";
 
 interface UserRow {
@@ -356,6 +359,83 @@ export class D1EnvRepo implements EnvRepo {
     await this.db
       .prepare("DELETE FROM environments WHERE id = ?")
       .bind(id)
+      .run();
+  }
+}
+
+interface ApiKeyRow {
+  id: string;
+  env_id: string;
+  type: string;
+  label: string | null;
+  key_hash: string;
+  key_prefix: string;
+  last_used_at: number | null;
+  revoked_at: number | null;
+  created_at: number;
+}
+
+function toApiKey(r: ApiKeyRow): ApiKey {
+  return {
+    id: r.id,
+    envId: r.env_id,
+    type: r.type as ApiKeyType,
+    label: r.label,
+    keyHash: r.key_hash,
+    keyPrefix: r.key_prefix,
+    lastUsedAt: r.last_used_at,
+    revokedAt: r.revoked_at,
+    createdAt: r.created_at,
+  };
+}
+
+export class D1ApiKeyRepo implements ApiKeyRepo {
+  constructor(private readonly db: D1Database) {}
+
+  async create(k: ApiKey): Promise<ApiKey> {
+    await this.db
+      .prepare(
+        "INSERT INTO api_keys (id, env_id, type, label, key_hash, key_prefix, last_used_at, revoked_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .bind(
+        k.id,
+        k.envId,
+        k.type,
+        k.label,
+        k.keyHash,
+        k.keyPrefix,
+        k.lastUsedAt,
+        k.revokedAt,
+        k.createdAt
+      )
+      .run();
+    return k;
+  }
+
+  async listByEnv(envId: string): Promise<ApiKey[]> {
+    const { results } = await this.db
+      .prepare(
+        "SELECT * FROM api_keys WHERE env_id = ? ORDER BY created_at DESC"
+      )
+      .bind(envId)
+      .all<ApiKeyRow>();
+    return results.map(toApiKey);
+  }
+
+  async findById(id: string): Promise<ApiKey | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM api_keys WHERE id = ?")
+      .bind(id)
+      .first<ApiKeyRow>();
+    return row ? toApiKey(row) : null;
+  }
+
+  async update(k: ApiKey): Promise<void> {
+    await this.db
+      .prepare(
+        "UPDATE api_keys SET label = ?, last_used_at = ?, revoked_at = ? WHERE id = ?"
+      )
+      .bind(k.label, k.lastUsedAt, k.revokedAt, k.id)
       .run();
   }
 }

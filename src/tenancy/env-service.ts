@@ -94,6 +94,15 @@ export class EnvService {
     return this.envs.listByOrg(orgId);
   }
 
+  /** Fetch an env that belongs to the org (throws NOT_FOUND otherwise). */
+  async getForOrg(orgId: string, envId: string): Promise<Environment> {
+    const env = await this.envs.findById(envId);
+    if (!env || env.orgId !== orgId) {
+      throw new EnvError("NOT_FOUND");
+    }
+    return env;
+  }
+
   /** Delete an env (never `prod`; must belong to the org). */
   async delete(orgId: string, envId: string): Promise<void> {
     const env = await this.envs.findById(envId);
