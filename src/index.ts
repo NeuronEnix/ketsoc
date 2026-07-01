@@ -140,9 +140,13 @@ export default {
       if (!user) {
         return errResponse("UNAUTHENTICATED", "Not signed in", 401);
       }
+      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
       const orgService = new OrgService({
         orgs: new D1OrgRepo(env.DB),
         memberships: new D1MembershipRepo(env.DB),
+        // Every org is born with prod + test environments (spec §14 onboarding).
+        seedEnvironments: (orgId) =>
+          envService.seedDefaults(orgId).then(() => undefined),
       });
       return handleOrgsRequest(req, orgService, user);
     }

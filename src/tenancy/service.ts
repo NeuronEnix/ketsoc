@@ -32,6 +32,13 @@ export interface OrgServiceOptions {
   nowMs?: () => number;
   genId?: (prefix: string) => string;
   maxOwnedOrgs?: number;
+  /**
+   * Called once a new org (and its owner membership) exists, so callers can
+   * seed the org's default environments. Kept as a hook to avoid coupling
+   * OrgService to EnvService — the spec seeds `prod`+`test` on every org
+   * creation, so this runs for onboarding and additional orgs alike.
+   */
+  seedEnvironments?: (orgId: string) => Promise<void>;
 }
 
 export class OrgService {
@@ -40,6 +47,9 @@ export class OrgService {
   private readonly nowMs: () => number;
   private readonly genId: (prefix: string) => string;
   private readonly maxOwnedOrgs: number;
+  private readonly seedEnvironments:
+    | ((orgId: string) => Promise<void>)
+    | undefined;
 
   constructor(opts: OrgServiceOptions) {
     this.orgs = opts.orgs;
@@ -47,6 +57,7 @@ export class OrgService {
     this.nowMs = opts.nowMs ?? (() => Date.now());
     this.genId = opts.genId ?? ((p) => typeid(p));
     this.maxOwnedOrgs = opts.maxOwnedOrgs ?? DEFAULT_MAX_OWNED_ORGS;
+    this.seedEnvironments = opts.seedEnvironments;
   }
 
   /** Create an org owned by `userId` (enforces the ≤N-owned limit). */
@@ -69,6 +80,9 @@ export class OrgService {
       role: "owner",
       createdAt: now,
     });
+    if (this.seedEnvironments) {
+      await this.seedEnvironments(org.id);
+    }
     return { org, role: "owner" };
   }
 

@@ -5,14 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { AppShell } from "./app-shell";
 
-function renderShell() {
+function renderShell(orgs: unknown[] = [{ id: "org_1", displayName: "Acme", handle: null, role: "owner", createdAt: 1 }]) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
-  qc.setQueryData(
-    ["orgs"],
-    [{ id: "org_1", displayName: "Acme", handle: null, role: "owner", createdAt: 1 }]
-  );
+  qc.setQueryData(["orgs"], orgs);
   qc.setQueryData(["me"], {
     id: "usr_1",
     email: "a@b.com",
@@ -42,5 +39,11 @@ describe("AppShell", () => {
     renderShell();
     expect(screen.getByText("Live Objects")).toBeInTheDocument();
     expect(screen.getByText("Streaming")).toBeInTheDocument();
+  });
+
+  it("shows onboarding instead of the shell when the user has no orgs", () => {
+    renderShell([]);
+    expect(screen.getByText("Create your organization")).toBeInTheDocument();
+    expect(screen.queryByText("Overview")).toBeNull();
   });
 });

@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
 
 import { OrgService } from "./service";
-import { MemoryOrgRepo, MemoryMembershipRepo } from "../db/memory-repos";
+import { EnvService } from "./env-service";
+import {
+  MemoryOrgRepo,
+  MemoryMembershipRepo,
+  MemoryEnvRepo,
+} from "../db/memory-repos";
 
 function makeService() {
   let counter = 0;
@@ -49,6 +54,39 @@ describe("OrgService.createOrg()", () => {
     });
     // A different user is unaffected.
     await expect(svc.createOrg("usr_2", "Fine")).resolves.toBeTruthy();
+  });
+});
+
+describe("OrgService.createOrg() env seeding", () => {
+  it("seeds prod + test via the injected seedEnvironments hook", async () => {
+    let counter = 0;
+    const envs = new MemoryEnvRepo();
+    const envService = new EnvService({
+      envs,
+      nowMs: () => 1_000,
+      genId: (p) => `${p}_${counter++}`,
+    });
+    const svc = new OrgService({
+      orgs: new MemoryOrgRepo(),
+      memberships: new MemoryMembershipRepo(),
+      nowMs: () => 1_000,
+      genId: (p) => `${p}_${counter++}`,
+      seedEnvironments: (orgId) =>
+        envService.seedDefaults(orgId).then(() => undefined),
+    });
+    const { org } = await svc.createOrg("usr_1", "Acme");
+    const seeded = await envService.listByOrg(org.id);
+    expect(seeded.map((e) => e.name).sort()).toEqual(["prod", "test"]);
+    const prod = seeded.find((e) => e.name === "prod");
+    expect(prod?.mode).toBe("live");
+    expect(prod?.isPermanent).toBe(true);
+  });
+
+  it("still creates an org when no seeder is provided", async () => {
+    const { svc } = makeService();
+    await expect(svc.createOrg("usr_1", "Acme")).resolves.toMatchObject({
+      role: "owner",
+    });
   });
 });
 

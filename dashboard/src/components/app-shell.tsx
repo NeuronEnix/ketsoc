@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CurrentOrgProvider, useCurrentOrg } from "@/lib/current-org";
 import { useLogout, useMe } from "@/lib/auth";
+import { OnboardingScreen } from "@/routes/onboarding";
 
 interface NavEntry {
   to: string;
@@ -176,10 +177,29 @@ function Shell() {
   );
 }
 
+/** Route between the loading spinner, onboarding, and the app shell. */
+function OrgGate() {
+  const { orgs, isLoading } = useCurrentOrg();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <span className="h-3 w-3 animate-pulse rounded-full bg-primary shadow-[0_0_20px_var(--color-primary)]" />
+      </div>
+    );
+  }
+
+  if (orgs.length === 0) {
+    return <OnboardingScreen />;
+  }
+
+  return <Shell />;
+}
+
 export function AppShell() {
   return (
     <CurrentOrgProvider>
-      <Shell />
+      <OrgGate />
     </CurrentOrgProvider>
   );
 }
