@@ -17,6 +17,7 @@ import { OverviewRoute } from "./routes/overview";
 import { ConnectionsRoute } from "./routes/connections";
 import { MetricsRoute } from "./routes/metrics";
 import { EventsRoute } from "./routes/events";
+import { UsageRoute } from "./routes/usage";
 import { EnvironmentsRoute } from "./routes/environments";
 import { ApiKeysRoute } from "./routes/api-keys";
 import { Placeholder } from "./routes/placeholder";
@@ -33,7 +34,7 @@ const router = createBrowserRouter([
       { path: "events", element: <EventsRoute /> },
       { path: "environments", element: <EnvironmentsRoute /> },
       { path: "keys", element: <ApiKeysRoute /> },
-      { path: "usage", element: <Placeholder title="Usage" /> },
+      { path: "usage", element: <UsageRoute /> },
       { path: "settings", element: <Placeholder title="Settings" /> },
     ],
   },
