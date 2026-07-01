@@ -8,6 +8,15 @@
       { "name": "USER_DO", "class_name": "UserDO" }
     ]
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ketsoc",
+      // Placeholder for local dev; run `pnpm db:create` to get the real id for remote.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
   "migrations": [
     {
       "tag": "v1",

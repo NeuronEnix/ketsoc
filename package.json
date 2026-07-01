@@ -32,6 +32,10 @@
   "scripts": {
     "build": "tsc",
     "dev": "wrangler dev",
+    "db:create": "wrangler d1 create ketsoc",
+    "db:migrate:local": "wrangler d1 migrations apply ketsoc --local",
+    "db:migrate": "wrangler d1 migrations apply ketsoc --remote",
+    "db:migrations:list": "wrangler d1 migrations list ketsoc --local",
     "build:clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc",
     "prepublishOnly": "pnpm build:clean && pnpm test",
     "prepack": "pnpm build:clean",

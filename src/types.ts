@@ -3,6 +3,8 @@
 export interface Env {
   SESSION_DO: DurableObjectNamespace<import("./session-do.js").SessionDO>;
   USER_DO: DurableObjectNamespace<import("./user-do.js").UserDO>;
+  /** D1 — relational store (accounts, orgs, envs, keys) + telemetry-for-now. */
+  DB: D1Database;
 }
 
 // ─── Wire protocol – client facing ──────────────────────────────────────────
