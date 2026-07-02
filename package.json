@@ -31,7 +31,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsc",
-    "dev": "wrangler dev",
+    "dev": "nodemon --watch src --watch wrangler.jsonc --watch .dev.vars --watch migrations --ext ts,tsx,json,jsonc,sql,vars --exec \"wrangler dev\"",
+    "dev:raw": "wrangler dev",
     "db:create": "wrangler d1 create ketsoc",
     "db:migrate:local": "wrangler d1 migrations apply ketsoc --local",
     "db:migrate": "wrangler d1 migrations apply ketsoc --remote",

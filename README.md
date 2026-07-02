@@ -124,16 +124,17 @@ wrangler deploy                # ship the Worker + assets
 
 **Root (Worker):**
 
-| Script                                        | What it does                                  |
-| --------------------------------------------- | --------------------------------------------- |
-| `pnpm dev`                                    | `wrangler dev` — Worker + D1 + DOs on `:8787` |
-| `pnpm test`                                   | Worker unit tests (Vitest)                    |
-| `pnpm typecheck`                              | `tsc --noEmit`                                |
-| `pnpm lint`                                   | ESLint (`--fix`)                              |
-| `pnpm build`                                  | Type-emit build (`tsc`)                       |
-| `pnpm db:migrate:local`                       | Apply D1 migrations to the local DB           |
-| `pnpm db:migrate`                             | Apply D1 migrations to the remote DB          |
-| `pnpm dashboard:dev` / `pnpm dashboard:build` | Proxy to the dashboard workspace              |
+| Script                                        | What it does                                                                                                                                |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                    | `wrangler dev` under nodemon (auto-restarts on `src/`, `wrangler.jsonc`, `.dev.vars`, `migrations/` changes) — Worker + D1 + DOs on `:8787` |
+| `pnpm dev:raw`                                | plain `wrangler dev`, no nodemon (used by the e2e webServer)                                                                                |
+| `pnpm test`                                   | Worker unit tests (Vitest)                                                                                                                  |
+| `pnpm typecheck`                              | `tsc --noEmit`                                                                                                                              |
+| `pnpm lint`                                   | ESLint (`--fix`)                                                                                                                            |
+| `pnpm build`                                  | Type-emit build (`tsc`)                                                                                                                     |
+| `pnpm db:migrate:local`                       | Apply D1 migrations to the local DB                                                                                                         |
+| `pnpm db:migrate`                             | Apply D1 migrations to the remote DB                                                                                                        |
+| `pnpm dashboard:dev` / `pnpm dashboard:build` | Proxy to the dashboard workspace                                                                                                            |
 
 **Dashboard (`dashboard/`):** `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm typecheck`, `pnpm lint`.
 

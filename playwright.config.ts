@@ -8,7 +8,7 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   use: { baseURL: "http://127.0.0.1:8787" },
   webServer: {
-    command: "pnpm dashboard:build && pnpm db:migrate:local && pnpm dev",
+    command: "pnpm dashboard:build && pnpm db:migrate:local && pnpm dev:raw",
     url: "http://127.0.0.1:8787/healthz",
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
