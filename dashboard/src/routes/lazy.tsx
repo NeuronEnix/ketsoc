@@ -3,6 +3,9 @@ import { lazy } from "react";
 // Lazily-loaded screens so each route ships as its own chunk and the entry
 // stays lean. Named exports need the `.then(m => ({ default: m.X }))` shim.
 export const Showcase = lazy(() => import("../App"));
+export const LandingRoute = lazy(() =>
+  import("./landing").then((m) => ({ default: m.LandingRoute }))
+);
 export const LoginRoute = lazy(() =>
   import("./login").then((m) => ({ default: m.LoginRoute }))
 );

@@ -29,7 +29,7 @@ export function SignupRoute() {
             pending={signup.isPending}
             error={signup.isError ? authErrorMessage(signup.error) : null}
             onSubmit={(v) =>
-              signup.mutate(v, { onSuccess: () => navigate("/") })
+              signup.mutate(v, { onSuccess: () => navigate("/overview") })
             }
           />
           <p className="mt-4 text-sm text-muted-foreground">

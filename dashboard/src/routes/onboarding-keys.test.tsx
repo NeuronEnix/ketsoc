@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { OnboardingScreen } from "./onboarding";
@@ -39,7 +39,7 @@ describe("Onboarding key-reveal flow", () => {
     post.mockReset();
   });
 
-  it("creates the org, then reveals prod publishable + secret keys", async () => {
+  it("auto-creates the org, then reveals prod publishable + secret keys", async () => {
     get.mockImplementation(async (path: string) =>
       path.endsWith("/envs")
         ? [
@@ -69,12 +69,7 @@ describe("Onboarding key-reveal flow", () => {
 
     renderFlow();
 
-    fireEvent.change(screen.getByLabelText("Organization name"), {
-      target: { value: "Acme Inc" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Create organization" }));
-
-    // Advances to the key-reveal step.
+    // Goes straight to the key-reveal step — no org-name form.
     await waitFor(() =>
       expect(screen.getByText("Your API keys")).toBeInTheDocument()
     );
@@ -88,8 +83,11 @@ describe("Onboarding key-reveal flow", () => {
       screen.getByRole("button", { name: "Continue to dashboard" })
     ).toBeInTheDocument();
 
-    // Org was created and two keys were minted (publishable + secret).
-    expect(post).toHaveBeenCalledWith("/api/orgs", { displayName: "Acme Inc" });
+    // Points at the Settings rename instead of asking for a name upfront.
+    expect(screen.getByText(/rename\s*it any time in/i)).toBeInTheDocument();
+
+    // Org was auto-created and two keys were minted (publishable + secret).
+    expect(post).toHaveBeenCalledWith("/api/orgs", { displayName: "Personal" });
     const keyCalls = post.mock.calls.filter(([p]) => p.endsWith("/keys"));
     expect(keyCalls).toHaveLength(2);
   });

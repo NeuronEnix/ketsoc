@@ -19,6 +19,7 @@ import {
   ConnectionsRoute,
   EnvironmentsRoute,
   EventsRoute,
+  LandingRoute,
   LoginRoute,
   MetricsRoute,
   OverviewRoute,
@@ -31,9 +32,16 @@ import {
 const router = createBrowserRouter([
   {
     path: "/",
+    element: (
+      <Suspense fallback={<ScreenFallback />}>
+        <LandingRoute />
+      </Suspense>
+    ),
+  },
+  {
+    // Pathless layout: the authenticated shell around the app screens.
     element: <ProtectedShell />,
     children: [
-      { index: true, element: <Navigate to="/overview" replace /> },
       { path: "overview", element: <OverviewRoute /> },
       { path: "connections", element: <ConnectionsRoute /> },
       { path: "metrics", element: <MetricsRoute /> },

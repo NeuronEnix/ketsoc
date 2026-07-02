@@ -50,7 +50,7 @@ describe("AppShell", () => {
 
   it("shows onboarding instead of the shell when the user has no orgs", () => {
     renderShell([]);
-    expect(screen.getByText("Create your organization")).toBeInTheDocument();
+    expect(screen.getByText("Setting up your workspace…")).toBeInTheDocument();
     expect(screen.queryByText("Overview")).toBeNull();
   });
 

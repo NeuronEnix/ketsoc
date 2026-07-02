@@ -15,8 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
 function orgError(e: unknown): string {
@@ -33,91 +31,72 @@ function orgError(e: unknown): string {
   return "Something went wrong.";
 }
 
+const DEFAULT_ORG_NAME = "Personal";
+
 /**
- * First-run flow for a user with no org. Step 1 names the org (server seeds
- * `prod` + `test`); step 2 reveals the fresh `prod` API keys. We deliberately
- * hold off invalidating `["orgs"]` until the flow finishes, so the org gate
- * keeps us here through both steps instead of jumping to the shell.
+ * First-run flow for a user with no org. The org is auto-created with a
+ * default name (renameable in Settings) so the fresh `prod` API keys appear
+ * immediately after signup. We deliberately hold off invalidating `["orgs"]`
+ * until the flow finishes, so the org gate keeps us here through the reveal.
  */
 export function OnboardingScreen() {
   const qc = useQueryClient();
   const [org, setOrg] = useState<Org | null>(null);
+  const started = useRef(false);
 
   const finish = () => qc.invalidateQueries({ queryKey: ["orgs"] });
 
-  return org ? (
-    <KeysStep org={org} onFinish={finish} />
-  ) : (
-    <OrgStep onCreated={setOrg} />
-  );
-}
-
-function OrgStep({ onCreated }: { onCreated: (org: Org) => void }) {
-  const [name, setName] = useState("");
-  const valid = name.trim().length > 0 && name.trim().length <= 40;
-
-  // Intentionally does NOT invalidate ["orgs"] — the parent controls that.
+  // Intentionally does NOT invalidate ["orgs"] — `finish` controls that.
   const createOrg = useMutation({
-    mutationFn: (displayName: string) =>
-      api.post<Org>("/api/orgs", { displayName }),
-    onSuccess: (org) => {
-      toast.success(`Welcome to ${org.displayName} 🎉`);
-      onCreated(org);
-    },
-    onError: (e) => toast.error(orgError(e)),
+    mutationFn: () =>
+      api.post<Org>("/api/orgs", { displayName: DEFAULT_ORG_NAME }),
+    onSuccess: setOrg,
   });
+  const create = createOrg.mutate;
 
-  return (
-    <AuthShell>
-      <Card>
-        <CardHeader>
-          <CardTitle>Create your organization</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Your workspace for API keys, environments, and realtime metrics.
-            We'll seed a{" "}
-            <span className="font-mono text-foreground">prod</span> and{" "}
-            <span className="font-mono text-foreground">test</span> environment
-            to get you started.
-          </p>
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (valid && !createOrg.isPending) {
-                createOrg.mutate(name.trim());
-              }
-            }}
-          >
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="org-name">Organization name</Label>
-              <Input
-                id="org-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Acme Inc"
-                maxLength={40}
-                autoFocus
-              />
-              {createOrg.isError ? (
-                <p className="text-xs text-destructive">
-                  {orgError(createOrg.error)}
-                </p>
-              ) : null}
-            </div>
-            <Button
-              type="submit"
-              disabled={!valid || createOrg.isPending}
-              className="w-full"
-            >
-              {createOrg.isPending ? "Creating…" : "Create organization"}
+  useEffect(() => {
+    if (!started.current) {
+      started.current = true;
+      create();
+    }
+  }, [create]);
+
+  if (createOrg.isError) {
+    return (
+      <AuthShell>
+        <Card>
+          <CardHeader>
+            <CardTitle>Couldn't set up your workspace</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              {orgError(createOrg.error)}
+            </p>
+            <Button className="w-full" onClick={() => create()}>
+              Try again
             </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </AuthShell>
-  );
+          </CardContent>
+        </Card>
+      </AuthShell>
+    );
+  }
+
+  if (!org) {
+    return (
+      <AuthShell>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-5">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary shadow-[0_0_16px_var(--color-primary)]" />
+            <p className="text-sm text-muted-foreground">
+              Setting up your workspace…
+            </p>
+          </CardContent>
+        </Card>
+      </AuthShell>
+    );
+  }
+
+  return <KeysStep org={org} onFinish={finish} />;
 }
 
 function KeyRow({ k }: { k: CreatedKey }) {
@@ -204,6 +183,12 @@ function KeysStep({ org, onFinish }: { org: Org; onFinish: () => void }) {
             <span className="font-mono text-foreground">prod</span>. The secret
             (<span className="font-mono text-foreground">ksk</span>) is shown{" "}
             <span className="text-foreground">once</span> — store it now.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Your workspace was created as{" "}
+            <span className="text-foreground">{org.displayName}</span> — rename
+            it any time in{" "}
+            <span className="text-foreground">Settings</span>.
           </p>
 
           {keys.map((k) => (

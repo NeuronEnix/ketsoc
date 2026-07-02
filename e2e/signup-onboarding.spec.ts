@@ -1,20 +1,28 @@
 import { test, expect } from "@playwright/test";
 
-test("signup → onboarding → overview golden path", async ({ page }) => {
+test("landing → signup → onboarding → overview golden path", async ({
+  page,
+}) => {
   // Local D1 persists across runs, so the email must be unique per run.
   const email = `e2e-${Date.now()}@ketsoc.dev`;
 
+  // Landing page
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: /Sockets at the edge/ })
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: /start building/i })
+    .first()
+    .click();
+  await page.waitForURL("**/signup");
+
   // Sign up
-  await page.goto("/signup");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("ketsoc-e2e");
   await page.getByRole("button", { name: "Create account" }).click();
 
-  // Onboarding (zero orgs): create the first organization
-  await page.getByLabel("Organization name").fill("E2E Org");
-  await page.getByRole("button", { name: "Create organization" }).click();
-
-  // Key-reveal step: a public and a secret key, shown once
+  // Onboarding: the org is auto-created ("Personal") — keys appear directly
   await expect(page.getByText(/kpk\./).first()).toBeVisible();
   await expect(page.getByText(/ksk\./).first()).toBeVisible();
 

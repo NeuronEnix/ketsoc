@@ -29,7 +29,7 @@ export function LoginRoute() {
             pending={login.isPending}
             error={login.isError ? authErrorMessage(login.error) : null}
             onSubmit={(v) =>
-              login.mutate(v, { onSuccess: () => navigate("/") })
+              login.mutate(v, { onSuccess: () => navigate("/overview") })
             }
           />
           <p className="mt-4 text-sm text-muted-foreground">
