@@ -2,19 +2,14 @@ import type { Env, EmitPayload } from "./types.js";
 import { okResponse, errResponse } from "./types.js";
 import { SessionDO } from "./session-do.js";
 import { UserDO } from "./user-do.js";
-import { AuthService } from "./auth/service.js";
-import { OrgService } from "./tenancy/service.js";
-import { EnvService } from "./tenancy/env-service.js";
-import { KeyService } from "./keys/service.js";
 import {
-  D1UserRepo,
-  D1SessionRepo,
-  D1OrgRepo,
-  D1MembershipRepo,
-  D1EnvRepo,
-  D1ApiKeyRepo,
-} from "./db/d1-repos.js";
-import { handleAuthRequest, getAuthUser } from "./api/auth.js";
+  buildAuthService,
+  buildEnvService,
+  buildKeyService,
+  buildOrgService,
+  requireAuth,
+} from "./api/services.js";
+import { handleAuthRequest } from "./api/auth.js";
 import { handleOrgsRequest } from "./api/orgs.js";
 import { handleEnvsRequest } from "./api/envs.js";
 import { handleKeysRequest } from "./api/keys.js";
@@ -24,6 +19,15 @@ import { handleEventsRequest } from "./api/events.js";
 import { handleUsageRequest } from "./api/usage.js";
 
 export { SessionDO, UserDO };
+
+// Env-scoped endpoints under /api/orgs/:org/envs/:env/<kind>.
+const ENV_SCOPED = new Set([
+  "keys",
+  "metrics",
+  "connections",
+  "events",
+  "usage",
+]);
 
 /**
  * Main Worker entrypoint.
@@ -48,178 +52,72 @@ export default {
 
     // ── Auth API ─────────────────────────────────────────────────────────────
     if (url.pathname.startsWith("/api/auth/")) {
-      const authService = new AuthService({
-        users: new D1UserRepo(env.DB),
-        sessions: new D1SessionRepo(env.DB),
-        jwtSecret: env.JWT_SECRET,
-      });
-      const authResponse = await handleAuthRequest(req, authService);
+      const authResponse = await handleAuthRequest(req, buildAuthService(env));
       if (authResponse) {
         return authResponse;
       }
     }
 
-    // ── API keys (nested under envs, requires auth) ───────────────────────────
+    // ── Env-scoped APIs: /api/orgs/:org/envs/:env/<kind> (requires auth) ───────
+    const segs = url.pathname.split("/");
     if (
       url.pathname.startsWith("/api/orgs/") &&
-      url.pathname.split("/")[4] === "envs" &&
-      url.pathname.split("/")[6] === "keys"
+      segs[4] === "envs" &&
+      segs[6] !== undefined &&
+      ENV_SCOPED.has(segs[6])
     ) {
-      const authService = new AuthService({
-        users: new D1UserRepo(env.DB),
-        sessions: new D1SessionRepo(env.DB),
-        jwtSecret: env.JWT_SECRET,
-      });
-      const user = await getAuthUser(req, authService);
-      if (!user) {
-        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
+      const user = await requireAuth(req, env);
+      if (user instanceof Response) {
+        return user;
       }
-      const orgService = new OrgService({
-        orgs: new D1OrgRepo(env.DB),
-        memberships: new D1MembershipRepo(env.DB),
-      });
-      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
-      const keyService = new KeyService({ keys: new D1ApiKeyRepo(env.DB) });
-      return handleKeysRequest(
+      const orgService = buildOrgService(env);
+      const envService = buildEnvService(env);
+      switch (segs[6]) {
+        case "keys":
+          return handleKeysRequest(
+            req,
+            { orgService, envService, keyService: buildKeyService(env) },
+            user
+          );
+        case "metrics":
+          return handleMetricsRequest(req, { orgService, envService }, user);
+        case "connections":
+          return handleConnectionsRequest(
+            req,
+            { orgService, envService },
+            user
+          );
+        case "events":
+          return handleEventsRequest(req, { orgService, envService }, user);
+        case "usage":
+          return handleUsageRequest(req, { orgService, envService }, user);
+      }
+    }
+
+    // ── Environments API (nested under orgs, requires auth) ───────────────────
+    if (url.pathname.startsWith("/api/orgs/") && segs[4] === "envs") {
+      const user = await requireAuth(req, env);
+      if (user instanceof Response) {
+        return user;
+      }
+      return handleEnvsRequest(
         req,
-        { orgService, envService, keyService },
+        { orgService: buildOrgService(env), envService: buildEnvService(env) },
         user
       );
     }
 
-    // ── Metrics API (nested under envs, requires auth) ────────────────────────
-    if (
-      url.pathname.startsWith("/api/orgs/") &&
-      url.pathname.split("/")[4] === "envs" &&
-      url.pathname.split("/")[6] === "metrics"
-    ) {
-      const authService = new AuthService({
-        users: new D1UserRepo(env.DB),
-        sessions: new D1SessionRepo(env.DB),
-        jwtSecret: env.JWT_SECRET,
-      });
-      const user = await getAuthUser(req, authService);
-      if (!user) {
-        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
-      }
-      const orgService = new OrgService({
-        orgs: new D1OrgRepo(env.DB),
-        memberships: new D1MembershipRepo(env.DB),
-      });
-      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
-      return handleMetricsRequest(req, { orgService, envService }, user);
-    }
-
-    // ── Connections API (nested under envs, requires auth) ────────────────────
-    if (
-      url.pathname.startsWith("/api/orgs/") &&
-      url.pathname.split("/")[4] === "envs" &&
-      url.pathname.split("/")[6] === "connections"
-    ) {
-      const authService = new AuthService({
-        users: new D1UserRepo(env.DB),
-        sessions: new D1SessionRepo(env.DB),
-        jwtSecret: env.JWT_SECRET,
-      });
-      const user = await getAuthUser(req, authService);
-      if (!user) {
-        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
-      }
-      const orgService = new OrgService({
-        orgs: new D1OrgRepo(env.DB),
-        memberships: new D1MembershipRepo(env.DB),
-      });
-      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
-      return handleConnectionsRequest(req, { orgService, envService }, user);
-    }
-
-    // ── Events API (nested under envs, requires auth) ─────────────────────────
-    if (
-      url.pathname.startsWith("/api/orgs/") &&
-      url.pathname.split("/")[4] === "envs" &&
-      url.pathname.split("/")[6] === "events"
-    ) {
-      const authService = new AuthService({
-        users: new D1UserRepo(env.DB),
-        sessions: new D1SessionRepo(env.DB),
-        jwtSecret: env.JWT_SECRET,
-      });
-      const user = await getAuthUser(req, authService);
-      if (!user) {
-        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
-      }
-      const orgService = new OrgService({
-        orgs: new D1OrgRepo(env.DB),
-        memberships: new D1MembershipRepo(env.DB),
-      });
-      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
-      return handleEventsRequest(req, { orgService, envService }, user);
-    }
-
-    // ── Usage API (nested under envs, requires auth) ──────────────────────────
-    if (
-      url.pathname.startsWith("/api/orgs/") &&
-      url.pathname.split("/")[4] === "envs" &&
-      url.pathname.split("/")[6] === "usage"
-    ) {
-      const authService = new AuthService({
-        users: new D1UserRepo(env.DB),
-        sessions: new D1SessionRepo(env.DB),
-        jwtSecret: env.JWT_SECRET,
-      });
-      const user = await getAuthUser(req, authService);
-      if (!user) {
-        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
-      }
-      const orgService = new OrgService({
-        orgs: new D1OrgRepo(env.DB),
-        memberships: new D1MembershipRepo(env.DB),
-      });
-      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
-      return handleUsageRequest(req, { orgService, envService }, user);
-    }
-
-    // ── Environments API (nested under orgs, requires auth) ───────────────────
-    if (
-      url.pathname.startsWith("/api/orgs/") &&
-      url.pathname.split("/")[4] === "envs"
-    ) {
-      const authService = new AuthService({
-        users: new D1UserRepo(env.DB),
-        sessions: new D1SessionRepo(env.DB),
-        jwtSecret: env.JWT_SECRET,
-      });
-      const user = await getAuthUser(req, authService);
-      if (!user) {
-        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
-      }
-      const orgService = new OrgService({
-        orgs: new D1OrgRepo(env.DB),
-        memberships: new D1MembershipRepo(env.DB),
-      });
-      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
-      return handleEnvsRequest(req, { orgService, envService }, user);
-    }
-
     // ── Orgs API (requires auth) ─────────────────────────────────────────────
     if (url.pathname.startsWith("/api/orgs")) {
-      const authService = new AuthService({
-        users: new D1UserRepo(env.DB),
-        sessions: new D1SessionRepo(env.DB),
-        jwtSecret: env.JWT_SECRET,
-      });
-      const user = await getAuthUser(req, authService);
-      if (!user) {
-        return errResponse("UNAUTHENTICATED", "Not signed in", 401);
+      const user = await requireAuth(req, env);
+      if (user instanceof Response) {
+        return user;
       }
-      const envService = new EnvService({ envs: new D1EnvRepo(env.DB) });
-      const orgService = new OrgService({
-        orgs: new D1OrgRepo(env.DB),
-        memberships: new D1MembershipRepo(env.DB),
-        // Every org is born with prod + test environments (spec §14 onboarding).
-        seedEnvironments: (orgId) =>
-          envService.seedDefaults(orgId).then(() => undefined),
-      });
+      const envService = buildEnvService(env);
+      // Every org is born with prod + test environments (spec §14 onboarding).
+      const orgService = buildOrgService(env, (orgId) =>
+        envService.seedDefaults(orgId).then(() => undefined)
+      );
       return handleOrgsRequest(req, orgService, user);
     }
 
