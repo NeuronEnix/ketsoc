@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -10,18 +10,23 @@ import { Toaster } from "sonner";
 
 import "./index.css";
 import { queryClient } from "./lib/auth";
-import Showcase from "./App";
-import { LoginRoute } from "./routes/login";
-import { SignupRoute } from "./routes/signup";
 import { ProtectedShell } from "./routes/protected";
-import { OverviewRoute } from "./routes/overview";
-import { ConnectionsRoute } from "./routes/connections";
-import { MetricsRoute } from "./routes/metrics";
-import { EventsRoute } from "./routes/events";
-import { UsageRoute } from "./routes/usage";
-import { SettingsRoute } from "./routes/settings";
-import { EnvironmentsRoute } from "./routes/environments";
-import { ApiKeysRoute } from "./routes/api-keys";
+import { ScreenFallback } from "./components/motion-outlet";
+// ProtectedShell stays eager (auth gate + shell); its children suspend into
+// MotionOutlet's boundary. The public screens get their own boundary below.
+import {
+  ApiKeysRoute,
+  ConnectionsRoute,
+  EnvironmentsRoute,
+  EventsRoute,
+  LoginRoute,
+  MetricsRoute,
+  OverviewRoute,
+  SettingsRoute,
+  Showcase,
+  SignupRoute,
+  UsageRoute,
+} from "./routes/lazy";
 
 const router = createBrowserRouter([
   {
@@ -39,9 +44,30 @@ const router = createBrowserRouter([
       { path: "settings", element: <SettingsRoute /> },
     ],
   },
-  { path: "/login", element: <LoginRoute /> },
-  { path: "/signup", element: <SignupRoute /> },
-  { path: "/showcase", element: <Showcase /> },
+  {
+    path: "/login",
+    element: (
+      <Suspense fallback={<ScreenFallback />}>
+        <LoginRoute />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/signup",
+    element: (
+      <Suspense fallback={<ScreenFallback />}>
+        <SignupRoute />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/showcase",
+    element: (
+      <Suspense fallback={<ScreenFallback />}>
+        <Showcase />
+      </Suspense>
+    ),
+  },
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
