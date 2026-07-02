@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   Activity,
   Boxes,
@@ -31,6 +31,7 @@ import { CurrentEnvProvider, useCurrentEnv } from "@/lib/current-env";
 import { useLogout, useMe } from "@/lib/auth";
 import { OnboardingScreen } from "@/routes/onboarding";
 import { CommandPalette } from "@/components/command-palette";
+import { MotionOutlet } from "@/components/motion-outlet";
 import { Kbd } from "@/components/ui/kbd";
 
 interface NavEntry {
@@ -239,7 +240,7 @@ function Shell() {
             </div>
           </header>
           <main className="flex-1 overflow-auto p-6">
-            <Outlet />
+            <MotionOutlet />
           </main>
         </div>
       </CurrentEnvProvider>
