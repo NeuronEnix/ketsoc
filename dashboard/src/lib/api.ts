@@ -12,10 +12,48 @@ export class ApiError extends Error {
   }
 }
 
+// 401s from these endpoints are real answers (bad credentials, dead session),
+// not a sign the short-lived access cookie expired — never refresh-retry them.
+const NO_REFRESH = new Set([
+  "/api/auth/login",
+  "/api/auth/signup",
+  "/api/auth/logout",
+  "/api/auth/refresh",
+]);
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+/** Rotate the session via the refresh cookie; deduped across concurrent 401s. */
+function refreshSession(): Promise<boolean> {
+  refreshInFlight ??= fetch("/api/auth/refresh", {
+    method: "POST",
+    credentials: "include",
+  })
+    .then((r) => r.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshInFlight = null;
+    });
+  return refreshInFlight;
+}
+
+/** The refresh cookie is dead too — the SPA state is unusable, start over. */
+function sessionExpired(): void {
+  const { pathname } = window.location;
+  if (pathname !== "/login" && pathname !== "/signup") {
+    try {
+      window.location.assign("/login");
+    } catch {
+      // jsdom: navigation isn't implemented; the ApiError below still surfaces.
+    }
+  }
+}
+
 async function request<T>(
   method: string,
   path: string,
-  body?: unknown
+  body?: unknown,
+  isRetry = false
 ): Promise<T> {
   const hasBody = body !== undefined;
   const res = await fetch(path, {
@@ -24,6 +62,18 @@ async function request<T>(
     headers: hasBody ? { "Content-Type": "application/json" } : undefined,
     body: hasBody ? JSON.stringify(body) : undefined,
   });
+
+  // Expired access cookie? Refresh the session once and replay the request.
+  if (res.status === 401 && !isRetry && !NO_REFRESH.has(path)) {
+    if (await refreshSession()) {
+      return request<T>(method, path, body, true);
+    }
+    // `/me` is the auth probe — its 401 means "signed out", which callers
+    // (useMe → ProtectedShell / the landing page) handle declaratively.
+    if (path !== "/api/auth/me") {
+      sessionExpired();
+    }
+  }
 
   let payload: ApiResponse<T> | null = null;
   try {
