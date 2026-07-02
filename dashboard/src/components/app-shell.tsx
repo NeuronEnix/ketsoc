@@ -25,14 +25,19 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { CurrentOrgProvider, useCurrentOrg } from "@/lib/current-org";
 import { CurrentEnvProvider, useCurrentEnv } from "@/lib/current-env";
+import { useCreateOrg } from "@/lib/orgs";
 import { useLogout, useMe } from "@/lib/auth";
+import { ApiError } from "@/lib/api";
 import { OnboardingScreen } from "@/routes/onboarding";
 import { CommandPalette } from "@/components/command-palette";
 import { MotionOutlet } from "@/components/motion-outlet";
 import { Kbd } from "@/components/ui/kbd";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface NavEntry {
   to: string;
@@ -83,8 +88,78 @@ function ComingSoon({ label }: { label: string }) {
   );
 }
 
+function NewOrgDialog({ onClose }: { onClose: () => void }) {
+  const createOrg = useCreateOrg();
+  const { select } = useCurrentOrg();
+  const [name, setName] = useState("");
+  const valid = name.trim().length > 0 && name.trim().length <= 40;
+
+  function submit() {
+    if (!valid || createOrg.isPending) return;
+    createOrg.mutate(name.trim(), {
+      onSuccess: (org) => {
+        select(org.id);
+        toast.success(`Created ${org.displayName} — prod + test seeded`);
+        onClose();
+      },
+      onError: (e) =>
+        toast.error(
+          e instanceof ApiError && e.code === "ORG_LIMIT"
+            ? "You've reached the limit of 5 organizations."
+            : "Couldn't create the organization"
+        ),
+    });
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 pt-[18vh] backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-[90vw] max-w-md rounded-xl border border-border bg-popover p-5 shadow-2xl shadow-black/40"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-sm font-semibold tracking-tight">
+          New organization
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          A fresh workspace, seeded with{" "}
+          <span className="font-mono text-foreground">prod</span> +{" "}
+          <span className="font-mono text-foreground">test</span> environments.
+        </p>
+        <form
+          className="mt-4 flex flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Acme Inc"
+            maxLength={40}
+            autoFocus
+            aria-label="Organization name"
+          />
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!valid || createOrg.isPending}>
+              {createOrg.isPending ? "Creating…" : "Create"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function OrgSwitcher() {
   const { orgs, current, select } = useCurrentOrg();
+  const [newOrgOpen, setNewOrgOpen] = useState(false);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
@@ -107,10 +182,16 @@ function OrgSwitcher() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-muted-foreground">
+        <DropdownMenuItem
+          className="text-muted-foreground"
+          onSelect={() => setNewOrgOpen(true)}
+        >
           <Plus className="h-4 w-4" /> New organization
         </DropdownMenuItem>
       </DropdownMenuContent>
+      {newOrgOpen ? (
+        <NewOrgDialog onClose={() => setNewOrgOpen(false)} />
+      ) : null}
     </DropdownMenu>
   );
 }
