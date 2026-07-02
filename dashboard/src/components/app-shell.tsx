@@ -24,7 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { CurrentOrgProvider, useCurrentOrg } from "@/lib/current-org";
@@ -65,7 +65,7 @@ function NavItem({ to, label, icon: Icon }: NavEntry) {
       to={to}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+          "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
           isActive && "bg-accent text-foreground"
         )
       }
@@ -88,11 +88,19 @@ function ComingSoon({ label }: { label: string }) {
   );
 }
 
-function NewOrgDialog({ onClose }: { onClose: () => void }) {
+export function NewOrgDialog({ onClose }: { onClose: () => void }) {
   const createOrg = useCreateOrg();
   const { select } = useCurrentOrg();
   const [name, setName] = useState("");
   const valid = name.trim().length > 0 && name.trim().length <= 40;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   function submit() {
     if (!valid || createOrg.isPending) return;
@@ -117,10 +125,16 @@ function NewOrgDialog({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-org-title"
         className="w-[90vw] max-w-md rounded-xl border border-border bg-popover p-5 shadow-2xl shadow-black/40"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-sm font-semibold tracking-tight">
+        <h2
+          id="new-org-title"
+          className="text-sm font-semibold tracking-tight"
+        >
           New organization
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">

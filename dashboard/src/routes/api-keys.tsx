@@ -100,8 +100,9 @@ export function ApiKeysRoute() {
             key={env.id}
             type="button"
             onClick={() => setSelectedEnvId(env.id)}
+            aria-pressed={env.id === envId}
             className={cn(
-              "rounded-md border px-3 py-1.5 font-mono text-sm transition-colors",
+              "rounded-md border px-3 py-1.5 font-mono text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
               env.id === envId
                 ? "border-primary/50 bg-primary/10 text-foreground"
                 : "border-border text-muted-foreground hover:bg-accent"
