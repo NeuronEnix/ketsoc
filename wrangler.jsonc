@@ -19,7 +19,7 @@
     {
       "binding": "DB",
       "database_name": "ketsoc",
-      // Placeholder for local dev; run `pnpm db:create` to get the real id for remote.
+      // Placeholder for local dev; run `pnpm db:create` to get the real id for remote (prod).
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "migrations"
     }
@@ -29,5 +29,32 @@
       "tag": "v1",
       "new_sqlite_classes": ["SessionDO", "UserDO"]
     }
-  ]
+  ],
+  "env": {
+    // Staging: `wrangler deploy --env test` → worker "ketsoc-test" + D1 "ketsoc-test".
+    // Bindings are not inherited across environments, so they are re-declared here.
+    "test": {
+      "name": "ketsoc-test",
+      "assets": {
+        "directory": "./dashboard/dist",
+        "binding": "ASSETS",
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/api/*", "/connect", "/emit", "/healthz"]
+      },
+      "durable_objects": {
+        "bindings": [
+          { "name": "SESSION_DO", "class_name": "SessionDO" },
+          { "name": "USER_DO", "class_name": "UserDO" }
+        ]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "ketsoc-test",
+          "database_id": "e3f78009-42b4-4d7d-8a0c-fb9c395399fa",
+          "migrations_dir": "migrations"
+        }
+      ]
+    }
+  }
 }
