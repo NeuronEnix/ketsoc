@@ -7,6 +7,9 @@ Cloudflare Durable Objects, plus a dark-violet observability dashboard that puts
 connections, throughput, and tail latency front and centre. It's meant to be the leaner,
 better-priced alternative to Ably / Pusher / PubNub.
 
+**🔴 Live (test environment):** <https://ketsoc-test.kaushikrb909.workers.dev> —
+sign up, grab your keys, and watch the dashboard light up.
+
 > **Status — Phase 1 (developer platform).** What runs today: email/password auth,
 > multi-tenant orgs with owner/member roles and link invites, environments (immutable
 > names, `prod` reserved + permanent, 5 max), reveal-once API keys, and a live
