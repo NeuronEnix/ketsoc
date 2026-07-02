@@ -24,10 +24,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+
 import { CurrentOrgProvider, useCurrentOrg } from "@/lib/current-org";
 import { CurrentEnvProvider, useCurrentEnv } from "@/lib/current-env";
 import { useLogout, useMe } from "@/lib/auth";
 import { OnboardingScreen } from "@/routes/onboarding";
+import { CommandPalette } from "@/components/command-palette";
+import { Kbd } from "@/components/ui/kbd";
 
 interface NavEntry {
   to: string;
@@ -175,9 +179,25 @@ function UserMenu() {
   );
 }
 
+function CommandTrigger({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      aria-label="Open command menu"
+    >
+      <span className="hidden sm:inline">Jump to…</span>
+      <Kbd>⌘K</Kbd>
+    </button>
+  );
+}
+
 function Shell() {
+  const [paletteOpen, setPaletteOpen] = useState(false);
   return (
     <div className="flex min-h-screen bg-background text-foreground">
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <aside className="flex w-60 shrink-0 flex-col border-r border-border p-3">
         <div className="mb-6 flex items-center gap-2 px-1.5 pt-1">
           <span className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_16px_var(--color-primary)]" />
@@ -214,6 +234,7 @@ function Shell() {
             <span className="text-muted-foreground/40">/</span>
             <EnvSwitcher />
             <div className="ml-auto flex items-center gap-3">
+              <CommandTrigger onClick={() => setPaletteOpen(true)} />
               <UserMenu />
             </div>
           </header>

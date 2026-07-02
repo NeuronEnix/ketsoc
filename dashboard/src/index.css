@@ -104,3 +104,21 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ⌘K command palette (cmdk) — dialog overlay + positioning. */
+[cmdk-overlay] {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(3px);
+}
+[cmdk-dialog] {
+  position: fixed;
+  left: 50%;
+  top: 18%;
+  z-index: 51;
+  width: 90vw;
+  max-width: 560px;
+  transform: translateX(-50%);
+}
