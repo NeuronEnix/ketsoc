@@ -9,6 +9,7 @@ import type {
 import { serializeCookie, parseCookies } from "../auth/cookies.js";
 import { errResponse } from "../types.js";
 import type { ApiResponse } from "../contract.js";
+import { readJson, readString, checkOrigin } from "./http.js";
 
 const ACCESS_COOKIE = "ks_at";
 const REFRESH_COOKIE = "ks_rt";
@@ -70,37 +71,6 @@ function clearedCookies(secure: boolean): string[] {
     serializeCookie(ACCESS_COOKIE, "", { ...opts, path: "/" }),
     serializeCookie(REFRESH_COOKIE, "", { ...opts, path: REFRESH_PATH }),
   ];
-}
-
-function checkOrigin(req: Request, url: URL): Response | null {
-  const origin = req.headers.get("Origin");
-  if (!origin) {
-    return null;
-  }
-  try {
-    if (new URL(origin).host !== url.host) {
-      return errResponse("FORBIDDEN", "Origin not allowed", 403);
-    }
-  } catch {
-    return errResponse("FORBIDDEN", "Bad origin", 403);
-  }
-  return null;
-}
-
-async function readJson(req: Request): Promise<Record<string, unknown> | null> {
-  try {
-    const body: unknown = await req.json();
-    return typeof body === "object" && body !== null
-      ? (body as Record<string, unknown>)
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function readString(body: Record<string, unknown>, key: string): string {
-  const value = body[key];
-  return typeof value === "string" ? value : "";
 }
 
 function requestMeta(req: Request): SessionMeta {
