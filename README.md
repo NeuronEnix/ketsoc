@@ -162,11 +162,15 @@ docs/superpowers/specs/ design spec (source of truth)
 ```bash
 pnpm test                 # Worker unit tests
 pnpm --dir dashboard test # Dashboard component tests
+pnpm test:e2e             # Playwright smoke e2e (signup → onboarding → overview)
 ```
 
 Services are tested against in-memory repository fakes; the D1 implementations are verified
 by running `wrangler dev` against a real local D1. TDD throughout — the tree stays green
 (typecheck + lint + tests + build) on every commit.
+
+The e2e suite builds the dashboard, migrates local D1, and boots `wrangler dev` by itself
+(it needs `.dev.vars` from the Setup section). First run only: `npx playwright install chromium`.
 
 ---
 

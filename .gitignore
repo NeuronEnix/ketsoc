@@ -144,5 +144,10 @@ vite.config.ts.timestamp-*
 .dev.vars
 .dev.vars.*
 
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+
 # Build output
 dist-check/
