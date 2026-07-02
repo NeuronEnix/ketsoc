@@ -11,7 +11,9 @@
  * API layer.
  */
 
-const DEFAULT_ITERATIONS = 210_000;
+// Cloudflare Workers caps PBKDF2 at 100k iterations in production (local
+// workerd does not enforce it) — deriveBits throws above this on deploy.
+const DEFAULT_ITERATIONS = 100_000;
 const SALT_BYTES = 16;
 const KEY_BITS = 256;
 

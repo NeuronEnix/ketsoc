@@ -11,7 +11,7 @@ const DEFAULT_REFRESH_TTL_SEC = 30 * 24 * 60 * 60;
 // A valid pbkdf2 hash of nothing useful — verified against when the email is
 // unknown, so login timing doesn't reveal whether an account exists.
 const DUMMY_HASH =
-  "pbkdf2$210000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+  "pbkdf2$100000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
 export type AuthErrorCode =
   | "INVALID_EMAIL"

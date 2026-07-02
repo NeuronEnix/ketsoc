@@ -43,6 +43,7 @@ Dashboard (`dashboard/src/`): `routes/*` are the screens; `lib/*` holds the fetc
 - **Dashboard test harness**: `dashboard/src/test/setup.ts` stubs `ResizeObserver` and `Element.prototype.scrollIntoView` (cmdk needs both under jsdom). Screen tests `vi.mock` `../lib/api` (and `sonner` where toasts are asserted).
 - **Onboarding gate is intentionally two-phase**: creating the org must NOT invalidate the `["orgs"]` query (that would unmount onboarding before the reveal-once key step); the parent invalidates on finish. Don't "fix" this.
 - **Password policy is deliberate**: any non-empty password is valid. Do not add strength rules.
+- **PBKDF2 is capped at 100,000 iterations on deployed Workers** — `crypto.subtle.deriveBits` throws above that in production (error 1101) while local workerd happily runs more, so this class of bug only appears after deploy. Keep `DEFAULT_ITERATIONS` and the `DUMMY_HASH` prefix at 100000.
 - Verify features end-to-end (wrangler dev smoke or browser), not just unit tests, before calling them done. When smoke-testing with curl, quote header vars — an unquoted `-H Origin:$H` after `-b "$J"` folds into the Cookie header and corrupts the JWT (cost us hours; see KAU-81).
 
 ## Workflow rules (user-mandated)
