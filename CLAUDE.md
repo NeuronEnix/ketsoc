@@ -48,6 +48,6 @@ Dashboard (`dashboard/src/`): `routes/*` are the screens; `lib/*` holds the fetc
 
 ## Workflow rules (user-mandated)
 
-- Commit format: `type(scope): intent` — e.g. `feat(dashboard): code-split routes`, `fix(auth): …`. Scope = top-level dir or module when the change is confined to it; optional otherwise. Types: feat/fix/chore/refactor/docs/test. **No `Co-Authored-By` trailer.**
+- Commit format: `type(scope): intent` — e.g. `feat(dashboard): code-split routes`, `fix(auth): …`. Scope = top-level dir or module when the change is confined to it; optional otherwise. Types: feat/fix/chore/refactor/docs/test.
 - TDD: failing test first, then implementation; keep all eight gates green at every commit.
 - Update the Linear issue (In Progress → Done with a completion comment) as part of finishing any tracked work; file follow-ups as new issues instead of leaving TODOs.
